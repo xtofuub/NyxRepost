@@ -291,32 +291,6 @@ function MonthChart({ monthly }) {
   const previous = recent[recent.length - 2]
   const average = Math.round(total / recent.length)
   const change = previous ? latest.count - previous.count : 0
-  const chart = {
-    width: 620,
-    height: 180,
-    left: 24,
-    right: 24,
-    top: 18,
-    bottom: 34,
-  }
-  const plotHeight = chart.height - chart.top - chart.bottom
-  const plotWidth = chart.width - chart.left - chart.right
-  const points = recent.map((item, index) => {
-    const x = chart.left + (recent.length === 1 ? 0 : (plotWidth / (recent.length - 1)) * index)
-    const y = chart.top + (1 - item.count / max) * plotHeight
-
-    return { item, x, y }
-  })
-  const linePoints = points.map(point => `${point.x},${point.y}`).join(' ')
-  const baseY = chart.height - chart.bottom
-  const areaPoints = `${chart.left},${baseY} ${linePoints} ${chart.width - chart.right},${baseY}`
-  const labelForPoint = (point) => {
-    const tooHigh = point.y < chart.top + 14
-    return {
-      y: tooHigh ? point.y + 18 : point.y - 10,
-      anchor: tooHigh ? 'hanging' : 'auto',
-    }
-  }
 
   return (
     <div className="space-y-3">
@@ -339,108 +313,44 @@ function MonthChart({ monthly }) {
           </div>
         </div>
 
-        <div className="mt-4 rounded-lg border border-white/[0.04] bg-white/[0.018] px-3 py-2">
-          <svg className="h-48 w-full overflow-visible" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label="Monthly repost trend">
-            <defs>
-              <linearGradient id="monthlyTrendArea" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="rgba(167,139,250,0.24)" />
-                <stop offset="100%" stopColor="rgba(167,139,250,0)" />
-              </linearGradient>
-            </defs>
-            {[0, 0.5, 1].map((ratio) => {
-              const y = chart.top + ratio * plotHeight
+        <div className="mt-4 rounded-lg border border-white/[0.04] bg-white/[0.018] p-3">
+          <div className="mb-3 flex items-center justify-between gap-3 border-b border-white/[0.05] pb-3">
+            <div className="text-xs text-white/32">Every active month in this window</div>
+            <div className="text-xs font-semibold text-white/48">Peak is {percent(peak.count, total)}% of recent reposts</div>
+          </div>
 
-              return (
-                <line
-                  key={ratio}
-                  x1={chart.left}
-                  x2={chart.width - chart.right}
-                  y1={y}
-                  y2={y}
-                  stroke="rgba(255,255,255,0.055)"
-                  strokeWidth="1"
-                />
-              )
-            })}
-            <polygon points={areaPoints} fill="url(#monthlyTrendArea)" />
-            <polyline
-              points={linePoints}
-              fill="none"
-              stroke="rgba(167,139,250,0.78)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {points.map((point) => {
-              const { item, x, y } = point
-              const isPeak = item.year === peak.year && item.month === peak.month
-              const isLatest = item.year === latest.year && item.month === latest.month
-              const valueLabel = labelForPoint(point)
-
-              return (
-                <g key={`${item.year}-${item.month}`} aria-label={`${fullMonthLabel(item)}: ${item.count} reposts`}>
-                  <rect
-                    x={x - 16}
-                    y={valueLabel.y - 10}
-                    width="32"
-                    height="16"
-                    rx="6"
-                    fill={isPeak ? 'rgba(167,139,250,0.16)' : 'rgba(10,10,10,0.72)'}
-                    stroke={isPeak ? 'rgba(167,139,250,0.28)' : 'rgba(255,255,255,0.06)'}
-                  />
-                  <text
-                    x={x}
-                    y={valueLabel.y + 1}
-                    textAnchor="middle"
-                    fill={isPeak ? '#a78bfa' : isLatest ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.58)'}
-                    fontSize="10"
-                    fontWeight={isPeak || isLatest ? '700' : '600'}
-                  >
-                    {numberWithCommas(item.count)}
-                  </text>
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={isPeak || isLatest ? 5 : 3.5}
-                    fill={isPeak ? '#a78bfa' : isLatest ? 'rgba(255,255,255,0.74)' : 'rgba(167,139,250,0.52)'}
-                    stroke="rgba(10,10,10,0.9)"
-                    strokeWidth="2"
-                  />
-                  <text
-                    x={x}
-                    y={chart.height - 10}
-                    textAnchor="middle"
-                    fill={isPeak ? 'rgba(167,139,250,0.95)' : isLatest ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.32)'}
-                    fontSize="10"
-                    fontWeight={isPeak || isLatest ? '700' : '500'}
-                  >
-                    {monthLabel(item)}
-                  </text>
-                </g>
-              )
-            })}
-          </svg>
-
-          <div className="grid grid-cols-3 gap-1.5 border-t border-white/[0.05] pt-2 sm:grid-cols-6 xl:grid-cols-12">
+          <div className="grid grid-cols-6 gap-1.5 xl:grid-cols-12">
             {recent.map((item) => {
+              const height = Math.max(10, (item.count / max) * 100)
               const isPeak = item.year === peak.year && item.month === peak.month
               const isLatest = item.year === latest.year && item.month === latest.month
 
               return (
                 <div
-                  key={`${item.year}-${item.month}-value`}
-                  className={`rounded-md border px-2 py-1.5 ${
+                  key={`${item.year}-${item.month}`}
+                  className={`min-w-0 rounded-lg border p-1.5 transition-colors duration-200 ${
                     isPeak
-                      ? 'border-accent/28 bg-accent/10'
+                      ? 'border-accent/34 bg-accent/10'
                       : isLatest
                         ? 'border-white/[0.08] bg-white/[0.035]'
                         : 'border-white/[0.045] bg-black/16'
                   }`}
                 >
-                  <div className={`text-[10px] font-semibold ${isPeak ? 'text-accent/90' : 'text-white/48'}`}>
+                  <div className={`truncate text-center text-[11px] font-bold ${isPeak ? 'text-accent' : 'text-white/76'}`}>
+                    {numberWithCommas(item.count)}
+                  </div>
+                  <div className="mt-1 flex h-24 items-end justify-center overflow-hidden rounded-md bg-black/28 px-1 py-1.5">
+                    <div
+                      className={`w-full max-w-3 rounded-t-sm ${
+                        isPeak ? 'bg-accent/80' : isLatest ? 'bg-white/45' : 'bg-white/20'
+                      }`}
+                      style={{ height: `${height}%` }}
+                      aria-label={`${fullMonthLabel(item)}: ${item.count} reposts`}
+                    />
+                  </div>
+                  <div className={`mt-1 truncate text-center text-[10px] font-semibold ${isPeak ? 'text-accent/90' : isLatest ? 'text-white/56' : 'text-white/32'}`}>
                     {monthLabel(item)}
                   </div>
-                  <div className="mt-0.5 text-xs font-bold text-white/78">{numberWithCommas(item.count)}</div>
                 </div>
               )
             })}
