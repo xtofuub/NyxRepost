@@ -8,6 +8,7 @@ The main goal is simple: make repost activity easier to review without digging t
 
 ## Table of Contents
 
+- [Demo Video](#demo-video)
 - [Features](#features)
 - [How It Works](#how-it-works)
 - [Tech Stack](#tech-stack)
@@ -19,6 +20,12 @@ The main goal is simple: make repost activity easier to review without digging t
 - [Production Notes](#production-notes)
 - [Deploying to Vercel](#deploying-to-vercel)
 - [Troubleshooting](#troubleshooting)
+
+## Demo Video
+
+[![NyxRepost promo video preview](docs/media/nyxrepost-promo-preview.jpg)](docs/media/nyxrepost-promo.mp4)
+
+Watch the short promo walkthrough to see the repost history, inline video preview, chart summaries, and final search flow in motion.
 
 ## Features
 
