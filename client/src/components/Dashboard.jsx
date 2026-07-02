@@ -288,48 +288,142 @@ function MonthChart({ monthly }) {
   const max = Math.max(...recent.map(item => item.count), 1)
   const peak = recent.reduce((best, item) => item.count > best.count ? item : best, recent[0])
   const latest = recent[recent.length - 1]
+  const previous = recent[recent.length - 2]
   const average = Math.round(total / recent.length)
+  const change = previous ? latest.count - previous.count : 0
+  const chart = {
+    width: 620,
+    height: 180,
+    left: 24,
+    right: 24,
+    top: 18,
+    bottom: 34,
+  }
+  const plotHeight = chart.height - chart.top - chart.bottom
+  const plotWidth = chart.width - chart.left - chart.right
+  const points = recent.map((item, index) => {
+    const x = chart.left + (recent.length === 1 ? 0 : (plotWidth / (recent.length - 1)) * index)
+    const y = chart.top + (1 - item.count / max) * plotHeight
+
+    return { item, x, y }
+  })
+  const linePoints = points.map(point => `${point.x},${point.y}`).join(' ')
+  const baseY = chart.height - chart.bottom
+  const areaPoints = `${chart.left},${baseY} ${linePoints} ${chart.width - chart.right},${baseY}`
 
   return (
-    <div>
-      <div className="grid grid-cols-1 gap-2 mb-5 sm:grid-cols-2">
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <MiniStat label="Peak month" value={monthLabel(peak)} detail={`${numberWithCommas(peak.count)} in ${peak.year}`} />
+        <MiniStat label="Latest" value={monthLabel(latest)} detail={`${numberWithCommas(latest.count)} reposts`} />
         <MiniStat label="Average" value={numberWithCommas(average)} detail={`${recent.length} months`} />
       </div>
 
       <div className="rounded-xl border border-white/[0.05] bg-black/20 p-4">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {recent.map((item) => {
-            const width = Math.max(4, (item.count / max) * 100)
-            const isPeak = item.year === peak.year && item.month === peak.month
-            const isLatest = item.year === latest.year && item.month === latest.month
-
-            return (
-              <div key={`${item.year}-${item.month}`} className="rounded-lg border border-white/[0.04] bg-white/[0.018] p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className={`text-sm font-semibold ${isPeak ? 'text-accent' : 'text-white/75'}`}>{monthLabel(item)} {String(item.year).slice(2)}</div>
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-white/24">
-                      {isPeak ? 'Peak month' : isLatest ? 'Latest month' : 'Active month'}
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className={`text-sm font-semibold ${isPeak ? 'text-white' : 'text-white/70'}`}>{item.count}</div>
-                    <div className="text-[10px] uppercase tracking-[0.12em] text-white/24">reposts</div>
-                  </div>
-                </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.05]">
-                  <div
-                    className={`h-full rounded-full ${isPeak ? 'bg-accent/65' : isLatest ? 'bg-white/30' : 'bg-white/18'}`}
-                    style={{ width: `${width}%` }}
-                    title={`${fullMonthLabel(item)}: ${item.count} reposts`}
-                  />
-                </div>
-              </div>
-            )
-          })}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="text-sm font-semibold text-white/80">Last 12 active months</div>
+            <div className="mt-1 text-xs text-white/30">{numberWithCommas(total)} reposts in this window</div>
+          </div>
+          <div className={`w-max rounded-full border px-2.5 py-1 text-xs font-semibold ${
+            change >= 0 ? 'border-accent/20 bg-accent/10 text-accent/90' : 'border-white/[0.06] bg-white/[0.025] text-white/55'
+          }`}>
+            {previous ? `${change >= 0 ? '+' : ''}${numberWithCommas(change)} vs ${monthLabel(previous)}` : 'First month'}
+          </div>
         </div>
-        <p className="mt-4 text-xs text-white/30">Last {recent.length} active months. Purple marks the monthly peak.</p>
+
+        <div className="mt-4 rounded-lg border border-white/[0.04] bg-white/[0.018] px-3 py-2">
+          <svg className="h-44 w-full" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label="Monthly repost trend">
+            <defs>
+              <linearGradient id="monthlyTrendArea" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="rgba(167,139,250,0.24)" />
+                <stop offset="100%" stopColor="rgba(167,139,250,0)" />
+              </linearGradient>
+            </defs>
+            {[0, 0.5, 1].map((ratio) => {
+              const y = chart.top + ratio * plotHeight
+
+              return (
+                <line
+                  key={ratio}
+                  x1={chart.left}
+                  x2={chart.width - chart.right}
+                  y1={y}
+                  y2={y}
+                  stroke="rgba(255,255,255,0.055)"
+                  strokeWidth="1"
+                />
+              )
+            })}
+            <text x={chart.width - chart.right} y={chart.top - 6} textAnchor="end" fill="rgba(255,255,255,0.35)" fontSize="10" fontWeight="600">
+              {numberWithCommas(max)}
+            </text>
+            <polygon points={areaPoints} fill="url(#monthlyTrendArea)" />
+            <polyline
+              points={linePoints}
+              fill="none"
+              stroke="rgba(167,139,250,0.78)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {points.map(({ item, x, y }) => {
+              const isPeak = item.year === peak.year && item.month === peak.month
+              const isLatest = item.year === latest.year && item.month === latest.month
+
+              return (
+                <g key={`${item.year}-${item.month}`}>
+                  <title>{`${fullMonthLabel(item)}: ${item.count} reposts`}</title>
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isPeak || isLatest ? 5 : 3.5}
+                    fill={isPeak ? '#a78bfa' : isLatest ? 'rgba(255,255,255,0.74)' : 'rgba(167,139,250,0.52)'}
+                    stroke="rgba(10,10,10,0.9)"
+                    strokeWidth="2"
+                  />
+                  {(isPeak || isLatest) && (
+                    <text
+                      x={x}
+                      y={Math.max(12, y - 10)}
+                      textAnchor="middle"
+                      fill={isPeak ? '#a78bfa' : 'rgba(255,255,255,0.66)'}
+                      fontSize="11"
+                      fontWeight="700"
+                    >
+                      {numberWithCommas(item.count)}
+                    </text>
+                  )}
+                  <text
+                    x={x}
+                    y={chart.height - 10}
+                    textAnchor="middle"
+                    fill={isPeak ? 'rgba(167,139,250,0.95)' : isLatest ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.32)'}
+                    fontSize="10"
+                    fontWeight={isPeak || isLatest ? '700' : '500'}
+                  >
+                    {monthLabel(item)}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+
+        <div className="mt-3 grid gap-3 border-t border-white/[0.04] pt-3 text-xs sm:grid-cols-3">
+          <div>
+            <div className="font-semibold text-white/72">{fullMonthLabel(peak)}</div>
+            <div className="mt-1 text-white/28">Peak month</div>
+          </div>
+          <div>
+            <div className="font-semibold text-white/72">{fullMonthLabel(latest)}</div>
+            <div className="mt-1 text-white/28">Latest active month</div>
+          </div>
+          <div>
+            <div className="font-semibold text-white/72">{numberWithCommas(total)}</div>
+            <div className="mt-1 text-white/28">Recent reposts</div>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -440,7 +534,7 @@ function ScanDetails({ data, totalReposts, itemCount }) {
 function StatCard({ label, value }) {
   return (
     <div className="p-[1px] rounded-2xl bg-gradient-to-b from-white/[0.06] to-transparent hover:from-white/[0.08] transition-all duration-500">
-      <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-5 md:p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+      <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-4 md:p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
         <div className="text-xs text-white/30 mb-2 font-medium tracking-wide uppercase">{label}</div>
         <div className="text-2xl md:text-3xl font-bold text-white tracking-tight">{value}</div>
       </div>
@@ -758,7 +852,7 @@ function HistoryControls({
   const hasFilters = query || activeTag || activeAuthor || media !== 'all' || date !== 'all' || engagement !== 'all'
 
   return (
-    <div className="mb-5 rounded-2xl border border-white/[0.06] bg-black/20 p-4">
+    <div className="mb-4 rounded-2xl border border-white/[0.06] bg-black/20 p-3 md:p-4">
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
         <label className="block">
           <span className="sr-only">Search repost history</span>
@@ -836,7 +930,7 @@ function TopVideos({ items, onPreview, onSelectAuthor, onSelectTag }) {
   if (!highlights.length) return null
 
   return (
-    <div className="mb-5">
+    <div className="mb-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h4 className="text-sm font-semibold text-white/78">Top videos</h4>
         <span className="text-[10px] uppercase tracking-[0.16em] text-white/22">Fast picks</span>
@@ -898,7 +992,7 @@ function RepostList({ items, onPreview }) {
   if (!items?.length) return <p className="text-white/20 text-sm py-8 text-center">No repost items found</p>
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[88vh] overflow-y-auto pr-1 custom-scrollbar">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-[88vh] overflow-y-auto pr-1 custom-scrollbar">
       {items.map((item, index) => (
         <button
           type="button"
@@ -906,7 +1000,7 @@ function RepostList({ items, onPreview }) {
           onClick={() => onPreview?.(item)}
           className="group block w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] text-left transition-colors duration-200 hover:border-accent/25 hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
         >
-          <article className="grid grid-cols-[116px_minmax(0,1fr)] gap-4 p-3 sm:grid-cols-[132px_minmax(0,1fr)]">
+          <article className="grid grid-cols-[116px_minmax(0,1fr)] gap-3 p-3 sm:grid-cols-[132px_minmax(0,1fr)]">
             <div className="relative">
               <RepostThumbnail cover={item.cover} />
               <span className="absolute left-2 top-2 rounded-md bg-black/55 px-2 py-1 text-[10px] font-semibold text-white/80 backdrop-blur">
@@ -1029,10 +1123,10 @@ export default function Dashboard({ data, loading, error }) {
   }
 
   return (
-    <section className="relative px-4 py-24 md:py-32">
+    <section className="relative px-4 py-12 md:py-14">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-16">
-          <span className="inline-block rounded-full px-3.5 py-1 text-[10px] uppercase tracking-[0.25em] font-medium text-white/30 border border-white/10 bg-white/[0.03] mb-6">
+        <div className="mb-6 md:mb-8">
+          <span className="inline-block rounded-full px-3.5 py-1 text-[10px] uppercase tracking-[0.25em] font-medium text-white/30 border border-white/10 bg-white/[0.03] mb-4">
             Insights for @{data.username}
           </span>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.05]">
@@ -1042,7 +1136,7 @@ export default function Dashboard({ data, loading, error }) {
           </h2>
         </div>
 
-        <div className="grid grid-cols-12 gap-4 md:gap-6">
+        <div className="grid grid-cols-12 gap-3 md:gap-4">
           <div className="col-span-12 md:col-span-4">
             <StatCard label="Total Reposts" value={numberWithCommas(totalReposts)} />
           </div>
@@ -1055,8 +1149,8 @@ export default function Dashboard({ data, loading, error }) {
 
           <div id="repost-history" className="col-span-12 scroll-mt-24">
             <div className="rounded-2xl bg-void-mid border border-white/[0.08] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-              <div className="p-5 md:p-7">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-5">
+              <div className="p-4 md:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4">
                   <div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white">Repost History</h3>
                     <p className="mt-2 text-sm text-white/35 max-w-2xl">
@@ -1097,84 +1191,97 @@ export default function Dashboard({ data, loading, error }) {
             </div>
           </div>
 
-          <div className="col-span-12 md:col-span-6">
-            <div className="p-[1px] rounded-[2rem] bg-gradient-to-b from-white/[0.06] to-transparent">
-              <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Yearly Trend</h3>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-medium">Analytics</span>
+          <div className="col-span-12">
+            <div className="rounded-2xl bg-void-mid border border-white/[0.08] p-4 md:p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Activity Trends</h3>
+                  <p className="mt-1 text-sm text-white/32">Year totals and recent monthly momentum, kept close to the history.</p>
                 </div>
-                <YearChart yearly={data.timeStats?.yearly} />
+                <span className="w-max rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/35">
+                  Time signals
+                </span>
               </div>
-            </div>
-          </div>
 
-          <div className="col-span-12 md:col-span-6">
-            <div className="p-[1px] rounded-[2rem] bg-gradient-to-b from-white/[0.06] to-transparent h-full">
-              <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] h-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Monthly</h3>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-medium">Trend</span>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="min-w-0">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="text-sm font-semibold text-white/75">Yearly Trend</h4>
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-white/22">By year</span>
+                  </div>
+                  <YearChart yearly={data.timeStats?.yearly} />
                 </div>
-                <MonthChart monthly={data.timeStats?.monthly} />
-              </div>
-            </div>
-          </div>
 
-          <div className="col-span-12 md:col-span-5 self-start">
-            <div className="p-[1px] rounded-[2rem] bg-gradient-to-b from-white/[0.06] to-transparent">
-              <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Word Cloud</h3>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-medium">Top tags</span>
+                <div className="min-w-0 lg:border-l lg:border-white/[0.06] lg:pl-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="text-sm font-semibold text-white/75">Monthly Trend</h4>
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-white/22">Recent</span>
+                  </div>
+                  <MonthChart monthly={data.timeStats?.monthly} />
                 </div>
-                <WordCloud words={data.wordCloud} activeTag={activeTag} onSelectTag={selectTag} />
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-12 md:col-span-7 self-start">
-            <div className="p-[1px] rounded-[2rem] bg-gradient-to-b from-white/[0.06] to-transparent">
-              <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Top Authors</h3>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-medium">Most reposted</span>
-                </div>
-                <AuthorList
-                  authors={data.topAuthors}
-                  activeAuthor={activeAuthor}
-                  availableAuthors={historyAuthorIds}
-                  onSelectAuthor={selectAuthor}
-                />
               </div>
             </div>
           </div>
 
           <div className="col-span-12">
-            <div className="p-[1px] rounded-[2rem] bg-gradient-to-b from-white/[0.06] to-transparent">
-              <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Scan Details</h3>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-medium">Context</span>
+            <div className="rounded-2xl bg-void-mid border border-white/[0.08] p-4 md:p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Discovery Signals</h3>
+                  <p className="mt-1 text-sm text-white/32">Tags and creators you can click to filter the repost history.</p>
                 </div>
-                <ScanDetails data={data} totalReposts={totalReposts} itemCount={repostItems.length} />
+                <span className="w-max rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/35">
+                  Filter helpers
+                </span>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)]">
+                <div className="min-w-0">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="text-sm font-semibold text-white/75">Word Cloud</h4>
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-white/22">Top tags</span>
+                  </div>
+                  <WordCloud words={data.wordCloud} activeTag={activeTag} onSelectTag={selectTag} />
+                </div>
+
+                <div className="min-w-0 lg:border-l lg:border-white/[0.06] lg:pl-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="text-sm font-semibold text-white/75">Top Authors</h4>
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-white/22">Most reposted</span>
+                  </div>
+                  <AuthorList
+                    authors={data.topAuthors}
+                    activeAuthor={activeAuthor}
+                    availableAuthors={historyAuthorIds}
+                    onSelectAuthor={selectAuthor}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           <div className="col-span-12">
-            <div className="p-[1px] rounded-[2rem] bg-gradient-to-b from-white/[0.06] to-transparent">
-              <div className="rounded-[calc(2rem-1px)] bg-void-mid border border-white/[0.04] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-                <details>
-                  <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
-                    <h3 className="text-lg font-semibold text-white">Raw JSON</h3>
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-medium">Show debug</span>
-                  </summary>
-                  <pre className="text-xs text-emerald-400/80 font-mono bg-black/40 rounded-xl p-4 overflow-auto max-h-64 border border-white/[0.04] mt-4">
-                    {JSON.stringify(data, null, 2)}
-                  </pre>
-                </details>
+            <div className="rounded-2xl bg-void-mid border border-white/[0.08] p-4 md:p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Scan Details</h3>
+                  <p className="mt-1 text-sm text-white/32">Shows how much data was loaded, sampled, capped, or served from cache.</p>
+                </div>
+                <span className="w-max rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/35">
+                  Context
+                </span>
               </div>
+              <ScanDetails data={data} totalReposts={totalReposts} itemCount={repostItems.length} />
+
+              <details className="mt-4 border-t border-white/[0.05] pt-4">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
+                  <h4 className="text-sm font-semibold text-white/75">Raw JSON</h4>
+                  <span className="text-[10px] uppercase tracking-[0.16em] text-white/22 font-medium">Show debug</span>
+                </summary>
+                <pre className="text-xs text-emerald-400/80 font-mono bg-black/40 rounded-xl p-4 overflow-auto max-h-64 border border-white/[0.04] mt-4">
+                  {JSON.stringify(data, null, 2)}
+                </pre>
+              </details>
             </div>
           </div>
         </div>
