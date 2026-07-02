@@ -1,19 +1,19 @@
 const featureRows = [
   {
-    title: 'Inspect reposts fast',
-    body: 'Two-column history cards keep thumbnails, captions, creators, dates, and engagement visible without opening TikTok.',
+    title: 'Track repost habits',
+    body: 'See the videos, creators, dates, captions, and engagement behind a profile\'s repost activity.',
   },
   {
-    title: 'Explain the account',
-    body: 'Trends, tags, top authors, and scan details sit behind the history so the data has context without stealing focus.',
+    title: 'Spot repeat signals',
+    body: 'Top tags, authors, monthly trends, and strongest videos show what keeps coming up again and again.',
   },
   {
-    title: 'Verify weird results',
-    body: 'Raw JSON, cache state, sampled counts, and caps stay available when the API returns something unexpected.',
+    title: 'Open the receipts',
+    body: 'Preview videos inline and keep scan details plus raw JSON nearby when the API results look suspicious.',
   },
 ]
 
-const workflow = ['Fetch', 'Review', 'Preview', 'Compare']
+const workflow = ['Search', 'Scan', 'Watch', 'Compare']
 
 export default function AboutSection() {
   return (
@@ -23,18 +23,18 @@ export default function AboutSection() {
           <div className="grid gap-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <div className="border-b border-white/[0.06] p-5 md:p-6 lg:border-b-0 lg:border-r">
               <div className="mb-4 w-max rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/35">
-                Built for repost review
+                TikTok repost insights
               </div>
               <h2 className="max-w-md text-2xl font-bold leading-tight text-white md:text-3xl">
-                A cleaner way to read messy TikTok repost data.
+                See what a TikTok account keeps reposting.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-6 text-white/40">
-                NyxRepost turns the API response into a focused inspection workspace. The repost history stays first, while analytics and debug context help explain what the returned media actually contains.
+                Drop in a username and get a focused look at repost history, repeat creators, top tags, engagement spikes, and videos you can preview on the fly. NyxRepost keeps the history front and center, then adds the context for deeper digging.
               </p>
 
               <div className="mt-6 grid grid-cols-2 gap-2">
-                <AboutStat value="1" label="player loaded" />
-                <AboutStat value="Raw" label="JSON visible" />
+                <AboutStat value="History" label="front and center" />
+                <AboutStat value="Inline" label="video preview" />
               </div>
             </div>
 
