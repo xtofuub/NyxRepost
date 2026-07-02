@@ -59,3 +59,17 @@ From the client folder:
 ```bash
 npm run lint
 ```
+
+## Data Notes
+
+NyxRepost displays the data returned by the upstream repost API. Some TikTok data is not perfectly reliable from public endpoints, so returned videos should be treated as repost candidates when the API response looks inconsistent.
+
+The app keeps this transparent by exposing scan details, raw JSON, and the exact media records used to build the dashboard.
+
+## Tech Stack
+
+- React
+- Vite
+- Tailwind CSS
+- Express
+- TikTok embed player
