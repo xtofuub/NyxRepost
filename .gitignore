@@ -6,7 +6,12 @@ server/.api-cache.json
 .env.*
 .codex/
 .impeccable/
+.agents/
+agent/
 .vercel/
+skills-lock.json
+hyperframes.html
+nyxrepost-cinematic.webm
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
