@@ -123,10 +123,10 @@ export default function CompareSection() {
   }
 
   return (
-    <section id="compare" className="relative px-4 py-20 scroll-mt-24">
+    <section id="compare" className="relative px-4 py-10 md:py-12 scroll-mt-24">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-2xl border border-white/[0.08] bg-void-mid p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] md:p-7">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="rounded-2xl border border-white/[0.08] bg-void-mid p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] md:p-6">
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white md:text-3xl">Compare Profiles</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/35">
@@ -157,7 +157,7 @@ export default function CompareSection() {
           )}
 
           {results ? (
-            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="mt-5 grid gap-3 lg:grid-cols-2">
               <CompareColumn summary={results[0]} />
               <CompareColumn summary={results[1]} />
             </div>

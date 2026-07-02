@@ -1,8 +1,8 @@
 export default function AboutSection() {
   return (
-    <section id="about" className="relative px-4 py-20 scroll-mt-24">
+    <section id="about" className="relative px-4 py-10 md:py-12 scroll-mt-24">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div>
             <h2 className="text-2xl font-bold text-white md:text-3xl">About NyxRepost</h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/38">
