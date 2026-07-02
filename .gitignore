@@ -1,0 +1,12 @@
+node_modules/
+dist/
+client/dist/
+server/.api-cache.json
+.env
+.env.*
+.codex/
+.impeccable/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
