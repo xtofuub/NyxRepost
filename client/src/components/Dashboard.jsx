@@ -499,28 +499,6 @@ function AuthorBadge({ author }) {
   )
 }
 
-function VideoPreviewPoster({ item }) {
-  const src = thumbnailUrl(item?.cover)
-
-  return (
-    <div className="relative flex h-full min-h-[520px] items-center justify-center overflow-hidden bg-black">
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-70 blur-sm scale-105"
-          loading="lazy"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-white/[0.03]" />
-      )}
-      <div className="relative rounded-full border border-white/[0.12] bg-black/60 px-4 py-2 text-xs font-semibold text-white/65 backdrop-blur">
-        Scroll here to load
-      </div>
-    </div>
-  )
-}
-
 function VideoPlayerFrame({ item }) {
   const [loaded, setLoaded] = useState(false)
   const playerUrl = tiktokPlayerUrl(item)
@@ -532,14 +510,14 @@ function VideoPlayerFrame({ item }) {
 
   if (!playerUrl) {
     return (
-      <div className="flex h-full min-h-[520px] items-center justify-center p-8 text-center text-sm text-white/40">
+      <div className="flex h-full min-h-[460px] items-center justify-center p-8 text-center text-sm text-white/40">
         This repost does not include a playable post id.
       </div>
     )
   }
 
   return (
-    <div className="relative h-full min-h-[520px] bg-black">
+    <div className="relative h-full min-h-[460px] bg-black">
       {!loaded && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
           <div className="h-8 w-8 rounded-full border-2 border-white/15 border-t-white/60 animate-spin" />
@@ -551,7 +529,7 @@ function VideoPlayerFrame({ item }) {
         key={item.id}
         src={playerUrl}
         title={`TikTok preview by @${author}`}
-        className="h-full min-h-[520px] w-full border-0"
+        className="h-full min-h-[460px] w-full border-0"
         allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
         onLoad={() => setLoaded(true)}
@@ -560,71 +538,39 @@ function VideoPlayerFrame({ item }) {
   )
 }
 
-function VideoPreviewCard({ item, index, total, active, loadPlayer }) {
-  const author = item?.author?.unique_id || 'unknown'
-
-  return (
-    <article className="min-h-full snap-start p-3 md:p-5">
-      <div className={`grid min-h-[calc(92vh-92px)] gap-4 rounded-xl border p-3 transition-colors duration-200 lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)] ${
-        active ? 'border-accent/35 bg-white/[0.035]' : 'border-white/[0.06] bg-white/[0.02]'
-      }`}>
-        <div className="relative min-h-[520px] overflow-hidden rounded-xl bg-black">
-          {loadPlayer ? <VideoPlayerFrame item={item} /> : <VideoPreviewPoster item={item} />}
-          <span className="absolute left-3 top-3 rounded-md bg-black/65 px-2 py-1 text-[10px] font-semibold text-white/80 backdrop-blur">
-            {index + 1} / {total}
-          </span>
-        </div>
-
-        <aside className="flex min-h-0 flex-col p-1 md:p-3">
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-white/80">@{author}</div>
-            <div className="mt-1 text-xs text-white/32">
-              {formatDate(item.create_time)}
-              {item.duration > 0 && ` - ${formatDuration(item.duration)}`}
-            </div>
-          </div>
-
-          <p className="mt-5 max-h-40 overflow-y-auto pr-1 text-sm leading-6 text-white/72 custom-scrollbar">
-            {item.desc || 'No description'}
-          </p>
-
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <MiniStat label="Plays" value={numberWithCommas(item.stats?.play_count)} />
-            <MiniStat label="Likes" value={numberWithCommas(item.stats?.digg_count)} />
-            <MiniStat label="Comments" value={numberWithCommas(item.stats?.comment_count)} />
-            <MiniStat label="Shares" value={numberWithCommas(item.stats?.share_count)} />
-          </div>
-
-          <div className="mt-auto pt-5">
-            <a
-              href={item.share_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/78 transition-colors duration-200 hover:border-accent/30 hover:bg-white/[0.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
-            >
-              Open on TikTok
-            </a>
-          </div>
-        </aside>
-      </div>
-    </article>
-  )
-}
-
 function VideoPreviewModal({ item, items = [], onClose }) {
-  const feedRef = useRef(null)
-  const cardRefs = useRef(new Map())
-  const [activeKey, setActiveKey] = useState('')
+  const wheelLockRef = useRef(false)
+  const wheelTimeoutRef = useRef(null)
+  const touchStartYRef = useRef(null)
+  const [activeIndex, setActiveIndex] = useState(0)
   const feedItems = item && !items.some(entry => sameItem(entry, item)) ? [item, ...items] : items
   const selectedKey = item ? itemKey(item) : ''
-  const activeIndex = Math.max(0, feedItems.findIndex(entry => itemKey(entry) === activeKey))
+  const selectedIndex = Math.max(0, feedItems.findIndex(entry => itemKey(entry) === selectedKey))
+  const total = feedItems.length
+  const activeItem = feedItems[activeIndex] || item
+  const author = activeItem?.author?.unique_id || 'unknown'
+  const canGoPrevious = activeIndex > 0
+  const canGoNext = activeIndex < total - 1
 
   useEffect(() => {
     if (!item) return undefined
 
     const previousOverflow = document.body.style.overflow
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+
+      if (['ArrowDown', 'ArrowRight', 'PageDown'].includes(event.key)) {
+        event.preventDefault()
+        setActiveIndex(current => Math.min(total - 1, current + 1))
+      }
+
+      if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(event.key)) {
+        event.preventDefault()
+        setActiveIndex(current => Math.max(0, current - 1))
+      }
     }
 
     document.body.style.overflow = 'hidden'
@@ -633,39 +579,42 @@ function VideoPreviewModal({ item, items = [], onClose }) {
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
+      window.clearTimeout(wheelTimeoutRef.current)
     }
-  }, [item, onClose])
+  }, [item, onClose, total])
 
   useEffect(() => {
     if (!selectedKey) return
+    setActiveIndex(selectedIndex)
+  }, [selectedKey, selectedIndex])
 
-    setActiveKey(selectedKey)
+  const changeVideo = (direction) => {
+    setActiveIndex(current => Math.max(0, Math.min(total - 1, current + direction)))
+  }
 
-    window.requestAnimationFrame(() => {
-      cardRefs.current.get(selectedKey)?.scrollIntoView({ block: 'start' })
-    })
-  }, [selectedKey])
+  const handleWheel = (event) => {
+    if (total < 2 || Math.abs(event.deltaY) < 40) return
+    if (wheelLockRef.current) return
 
-  const handleFeedScroll = () => {
-    const container = feedRef.current
-    if (!container) return
+    wheelLockRef.current = true
+    changeVideo(event.deltaY > 0 ? 1 : -1)
+    window.clearTimeout(wheelTimeoutRef.current)
+    wheelTimeoutRef.current = window.setTimeout(() => {
+      wheelLockRef.current = false
+    }, 520)
+  }
 
-    const containerRect = container.getBoundingClientRect()
-    const center = containerRect.top + containerRect.height / 2
-    let nextKey = activeKey
-    let closest = Infinity
+  const handleTouchStart = (event) => {
+    touchStartYRef.current = event.touches[0]?.clientY ?? null
+  }
 
-    cardRefs.current.forEach((node, key) => {
-      const rect = node.getBoundingClientRect()
-      const distance = Math.abs(rect.top + rect.height / 2 - center)
-
-      if (distance < closest) {
-        closest = distance
-        nextKey = key
-      }
-    })
-
-    if (nextKey && nextKey !== activeKey) setActiveKey(nextKey)
+  const handleTouchEnd = (event) => {
+    if (touchStartYRef.current === null) return
+    const endY = event.changedTouches[0]?.clientY ?? touchStartYRef.current
+    const diff = touchStartYRef.current - endY
+    touchStartYRef.current = null
+    if (Math.abs(diff) < 50) return
+    changeVideo(diff > 0 ? 1 : -1)
   }
 
   if (!item || !feedItems.length) return null
@@ -675,18 +624,22 @@ function VideoPreviewModal({ item, items = [], onClose }) {
       className="fixed inset-0 z-50 bg-black/80 px-4 py-6 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
-      aria-label="Scrollable TikTok preview feed"
+      aria-label="TikTok preview"
       onMouseDown={onClose}
+      onWheel={handleWheel}
     >
       <div
-        className="mx-auto flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-void-mid shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
+        className="mx-auto flex h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-void-mid shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
         onMouseDown={(event) => event.stopPropagation()}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-4 py-3 md:px-5">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-white/82">Video feed</div>
+            <div className="text-sm font-semibold text-white/82">Video preview</div>
             <div className="mt-0.5 text-xs text-white/32">
-              Scroll to watch next • {activeIndex + 1} of {feedItems.length}
+              Scroll to change video - {activeIndex + 1} of {total}
             </div>
           </div>
 
@@ -699,37 +652,68 @@ function VideoPreviewModal({ item, items = [], onClose }) {
           </button>
         </div>
 
-        <div
-          ref={feedRef}
-          onScroll={handleFeedScroll}
-          className="min-h-0 flex-1 snap-y snap-proximity overflow-y-auto custom-scrollbar"
-        >
-          {feedItems.map((entry, index) => {
-            const key = itemKey(entry, index)
-            const cardIndex = activeIndex >= 0 ? activeIndex : 0
+        <div className="grid min-h-0 flex-1 overflow-y-auto custom-scrollbar lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)] lg:overflow-hidden">
+          <div className="relative min-h-[460px] bg-black">
+            <VideoPlayerFrame key={itemKey(activeItem, activeIndex)} item={activeItem} />
+            <span className="absolute left-3 top-3 rounded-md bg-black/65 px-2 py-1 text-[10px] font-semibold text-white/80 backdrop-blur">
+              {activeIndex + 1} / {total}
+            </span>
+          </div>
 
-            return (
-              <div
-                key={key}
-                ref={(node) => {
-                  if (node) cardRefs.current.set(key, node)
-                  else cardRefs.current.delete(key)
-                }}
-              >
-                <VideoPreviewCard
-                  item={entry}
-                  index={index}
-                  total={feedItems.length}
-                  active={key === activeKey}
-                  loadPlayer={Math.abs(index - cardIndex) <= 1}
-                />
+          <aside className="flex min-h-0 flex-col p-5 md:p-6">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-white/80">@{author}</div>
+              <div className="mt-1 text-xs text-white/32">
+                {formatDate(activeItem.create_time)}
+                {activeItem.duration > 0 && ` - ${formatDuration(activeItem.duration)}`}
               </div>
-            )
-          })}
+            </div>
+
+            <p className="mt-5 max-h-40 overflow-y-auto pr-1 text-sm leading-6 text-white/72 custom-scrollbar">
+              {activeItem.desc || 'No description'}
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <MiniStat label="Plays" value={numberWithCommas(activeItem.stats?.play_count)} />
+              <MiniStat label="Likes" value={numberWithCommas(activeItem.stats?.digg_count)} />
+              <MiniStat label="Comments" value={numberWithCommas(activeItem.stats?.comment_count)} />
+              <MiniStat label="Shares" value={numberWithCommas(activeItem.stats?.share_count)} />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                disabled={!canGoPrevious}
+                onClick={() => changeVideo(-1)}
+                className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/62 transition-colors duration-200 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={!canGoNext}
+                onClick={() => changeVideo(1)}
+                className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/78 transition-colors duration-200 hover:border-accent/30 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
+              >
+                Next
+              </button>
+            </div>
+
+            <div className="mt-auto pt-5">
+              <a
+                href={activeItem.share_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/78 transition-colors duration-200 hover:border-accent/30 hover:bg-white/[0.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
+              >
+                Open on TikTok
+              </a>
+            </div>
+          </aside>
         </div>
 
         <div className="border-t border-white/[0.06] px-4 py-3 text-xs leading-5 text-white/28 md:px-5">
-          Preview uses TikTok&apos;s official embedded player, so some videos may still ask TikTok for permission or login.
+          Only one player loads at a time. Use scroll, swipe, arrow keys, or the buttons to move through results.
         </div>
       </div>
     </div>
