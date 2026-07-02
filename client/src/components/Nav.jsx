@@ -3,8 +3,8 @@ import { useState } from 'react'
 const links = ['Dashboard', 'Compare', 'About']
 const hrefs = {
   Dashboard: '#dashboard',
-  Compare: '#dashboard',
-  About: '#footer',
+  Compare: '#compare',
+  About: '#about',
 }
 
 export default function Nav() {
