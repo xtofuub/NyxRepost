@@ -310,6 +310,13 @@ function MonthChart({ monthly }) {
   const linePoints = points.map(point => `${point.x},${point.y}`).join(' ')
   const baseY = chart.height - chart.bottom
   const areaPoints = `${chart.left},${baseY} ${linePoints} ${chart.width - chart.right},${baseY}`
+  const labelForPoint = (point) => {
+    const tooHigh = point.y < chart.top + 14
+    return {
+      y: tooHigh ? point.y + 18 : point.y - 10,
+      anchor: tooHigh ? 'hanging' : 'auto',
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -333,7 +340,7 @@ function MonthChart({ monthly }) {
         </div>
 
         <div className="mt-4 rounded-lg border border-white/[0.04] bg-white/[0.018] px-3 py-2">
-          <svg className="h-44 w-full" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label="Monthly repost trend">
+          <svg className="h-48 w-full overflow-visible" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label="Monthly repost trend">
             <defs>
               <linearGradient id="monthlyTrendArea" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="rgba(167,139,250,0.24)" />
@@ -355,9 +362,6 @@ function MonthChart({ monthly }) {
                 />
               )
             })}
-            <text x={chart.width - chart.right} y={chart.top - 6} textAnchor="end" fill="rgba(255,255,255,0.35)" fontSize="10" fontWeight="600">
-              {numberWithCommas(max)}
-            </text>
             <polygon points={areaPoints} fill="url(#monthlyTrendArea)" />
             <polyline
               points={linePoints}
@@ -367,13 +371,33 @@ function MonthChart({ monthly }) {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {points.map(({ item, x, y }) => {
+            {points.map((point) => {
+              const { item, x, y } = point
               const isPeak = item.year === peak.year && item.month === peak.month
               const isLatest = item.year === latest.year && item.month === latest.month
+              const valueLabel = labelForPoint(point)
 
               return (
-                <g key={`${item.year}-${item.month}`}>
-                  <title>{`${fullMonthLabel(item)}: ${item.count} reposts`}</title>
+                <g key={`${item.year}-${item.month}`} aria-label={`${fullMonthLabel(item)}: ${item.count} reposts`}>
+                  <rect
+                    x={x - 16}
+                    y={valueLabel.y - 10}
+                    width="32"
+                    height="16"
+                    rx="6"
+                    fill={isPeak ? 'rgba(167,139,250,0.16)' : 'rgba(10,10,10,0.72)'}
+                    stroke={isPeak ? 'rgba(167,139,250,0.28)' : 'rgba(255,255,255,0.06)'}
+                  />
+                  <text
+                    x={x}
+                    y={valueLabel.y + 1}
+                    textAnchor="middle"
+                    fill={isPeak ? '#a78bfa' : isLatest ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.58)'}
+                    fontSize="10"
+                    fontWeight={isPeak || isLatest ? '700' : '600'}
+                  >
+                    {numberWithCommas(item.count)}
+                  </text>
                   <circle
                     cx={x}
                     cy={y}
@@ -382,18 +406,6 @@ function MonthChart({ monthly }) {
                     stroke="rgba(10,10,10,0.9)"
                     strokeWidth="2"
                   />
-                  {(isPeak || isLatest) && (
-                    <text
-                      x={x}
-                      y={Math.max(12, y - 10)}
-                      textAnchor="middle"
-                      fill={isPeak ? '#a78bfa' : 'rgba(255,255,255,0.66)'}
-                      fontSize="11"
-                      fontWeight="700"
-                    >
-                      {numberWithCommas(item.count)}
-                    </text>
-                  )}
                   <text
                     x={x}
                     y={chart.height - 10}
@@ -408,6 +420,31 @@ function MonthChart({ monthly }) {
               )
             })}
           </svg>
+
+          <div className="grid grid-cols-3 gap-1.5 border-t border-white/[0.05] pt-2 sm:grid-cols-6 xl:grid-cols-12">
+            {recent.map((item) => {
+              const isPeak = item.year === peak.year && item.month === peak.month
+              const isLatest = item.year === latest.year && item.month === latest.month
+
+              return (
+                <div
+                  key={`${item.year}-${item.month}-value`}
+                  className={`rounded-md border px-2 py-1.5 ${
+                    isPeak
+                      ? 'border-accent/28 bg-accent/10'
+                      : isLatest
+                        ? 'border-white/[0.08] bg-white/[0.035]'
+                        : 'border-white/[0.045] bg-black/16'
+                  }`}
+                >
+                  <div className={`text-[10px] font-semibold ${isPeak ? 'text-accent/90' : 'text-white/48'}`}>
+                    {monthLabel(item)}
+                  </div>
+                  <div className="mt-0.5 text-xs font-bold text-white/78">{numberWithCommas(item.count)}</div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         <div className="mt-3 grid gap-3 border-t border-white/[0.04] pt-3 text-xs sm:grid-cols-3">
