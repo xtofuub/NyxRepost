@@ -17,6 +17,7 @@ The main goal is simple: make repost activity easier to review without digging t
 - [API Routes](#api-routes)
 - [Data Reliability](#data-reliability)
 - [Production Notes](#production-notes)
+- [Deploying to Vercel](#deploying-to-vercel)
 - [Troubleshooting](#troubleshooting)
 
 ## Features
@@ -148,6 +149,20 @@ npm start
 
 The Express server serves the built frontend and API routes from the same process.
 
+## Vercel Support
+
+This repository includes a `vercel.json` configuration and serverless functions under `api/`.
+
+On Vercel:
+
+- `client/` is built with Vite.
+- `client/dist` is served as the static frontend.
+- `/api/reposts/:username` is handled by `api/reposts/[username].js`.
+- `/api/thumbnail` is handled by `api/thumbnail.js`.
+- Non-API routes fall back to `index.html` for the React app.
+
+The local Express server is still useful for development and self-hosted deployments, but Vercel uses the serverless API functions instead.
+
 ## Available Scripts
 
 Root scripts:
@@ -220,6 +235,20 @@ For that reason, treat the returned media as repost candidates when the API outp
 - Keep `server/.api-cache.json` out of source control. It contains cached API responses.
 - Keep `node_modules/` and build outputs out of source control.
 - If deploying behind a platform proxy, make sure routes under `/api/*` reach the Express server.
+
+## Deploying to Vercel
+
+The project is ready to deploy from the repository root.
+
+Expected Vercel settings:
+
+| Setting | Value |
+| --- | --- |
+| Install Command | `npm install && cd client && npm install` |
+| Build Command | `cd client && npm run build` |
+| Output Directory | `client/dist` |
+
+The same values are already defined in `vercel.json`, so manual configuration is usually not needed.
 
 ## Troubleshooting
 
