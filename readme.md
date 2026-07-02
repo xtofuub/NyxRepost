@@ -38,3 +38,24 @@ The API proxy runs on:
 ```text
 http://localhost:3001
 ```
+
+## Project Structure
+
+```text
+client/    React and Vite frontend
+server/    Express API proxy and thumbnail endpoint
+docs/      Project screenshots and documentation assets
+```
+
+## Useful Commands
+
+```bash
+npm run dev      # run client and server together
+npm run build    # build the frontend
+```
+
+From the client folder:
+
+```bash
+npm run lint
+```
