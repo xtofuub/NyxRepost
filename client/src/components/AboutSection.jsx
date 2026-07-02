@@ -1,19 +1,62 @@
+const featureRows = [
+  {
+    title: 'Inspect reposts fast',
+    body: 'Two-column history cards keep thumbnails, captions, creators, dates, and engagement visible without opening TikTok.',
+  },
+  {
+    title: 'Explain the account',
+    body: 'Trends, tags, top authors, and scan details sit behind the history so the data has context without stealing focus.',
+  },
+  {
+    title: 'Verify weird results',
+    body: 'Raw JSON, cache state, sampled counts, and caps stay available when the API returns something unexpected.',
+  },
+]
+
+const workflow = ['Fetch', 'Review', 'Preview', 'Compare']
+
 export default function AboutSection() {
   return (
     <section id="about" className="relative px-4 py-10 md:py-12 scroll-mt-24">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div>
-            <h2 className="text-2xl font-bold text-white md:text-3xl">About NyxRepost</h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/38">
-              NyxRepost turns a raw repost API response into a focused review surface. The history stays first, while charts, tags, authors, and scan details explain what is inside the returned media.
-            </p>
-          </div>
+        <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-void-mid shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <div className="border-b border-white/[0.06] p-5 md:p-6 lg:border-b-0 lg:border-r">
+              <div className="mb-4 w-max rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs font-medium text-white/35">
+                Built for repost review
+              </div>
+              <h2 className="max-w-md text-2xl font-bold leading-tight text-white md:text-3xl">
+                A cleaner way to read messy TikTok repost data.
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-white/40">
+                NyxRepost turns the API response into a focused inspection workspace. The repost history stays first, while analytics and debug context help explain what the returned media actually contains.
+              </p>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <AboutTile title="History first" body="The main workflow is scanning videos, creators, captions, thumbnails, and engagement." />
-            <AboutTile title="Transparent data" body="Raw JSON and scan details stay available so odd API responses are easier to verify." />
-            <AboutTile title="Built for review" body="Filters, sort options, and the single-player preview keep inspection quick and clean." />
+              <div className="mt-6 grid grid-cols-2 gap-2">
+                <AboutStat value="1" label="player loaded" />
+                <AboutStat value="Raw" label="JSON visible" />
+              </div>
+            </div>
+
+            <div className="p-5 md:p-6">
+              <div className="grid gap-3">
+                {featureRows.map(row => (
+                  <AboutRow key={row.title} title={row.title} body={row.body} />
+                ))}
+              </div>
+
+              <div className="mt-5 rounded-xl border border-white/[0.055] bg-black/18 p-3">
+                <div className="mb-3 text-xs font-semibold text-white/46">Workflow</div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {workflow.map((item, index) => (
+                    <div key={item} className="rounded-lg border border-white/[0.05] bg-white/[0.025] px-3 py-2">
+                      <div className="text-[10px] font-semibold text-white/25">0{index + 1}</div>
+                      <div className="mt-1 text-sm font-semibold text-white/76">{item}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -21,11 +64,25 @@ export default function AboutSection() {
   )
 }
 
-function AboutTile({ title, body }) {
+function AboutRow({ title, body }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
-      <div className="text-sm font-semibold text-white/82">{title}</div>
-      <p className="mt-2 text-xs leading-5 text-white/34">{body}</p>
+    <div className="rounded-xl border border-white/[0.055] bg-white/[0.025] p-4">
+      <div className="flex items-start gap-3">
+        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-accent/70" />
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-white/84">{title}</div>
+          <p className="mt-1.5 text-xs leading-5 text-white/36">{body}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AboutStat({ value, label }) {
+  return (
+    <div className="rounded-xl border border-white/[0.055] bg-black/18 p-3">
+      <div className="text-lg font-bold text-white/86">{value}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/26">{label}</div>
     </div>
   )
 }
