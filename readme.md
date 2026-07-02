@@ -12,3 +12,29 @@ NyxRepost is a focused TikTok repost analytics dashboard. Enter a username, fetc
 - Lets you filter by text, creator, tag, media type, date range, and engagement.
 - Opens videos in a single embedded preview so only one player loads at a time.
 - Summarizes yearly trends, monthly activity, top tags, top authors, and scan details.
+
+## Quick Start
+
+Install dependencies:
+
+```bash
+npm run setup
+```
+
+Start the app:
+
+```bash
+npm run dev
+```
+
+Open the Vite app:
+
+```text
+http://localhost:5173
+```
+
+The API proxy runs on:
+
+```text
+http://localhost:3001
+```
