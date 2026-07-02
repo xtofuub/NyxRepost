@@ -12,6 +12,7 @@ agent/
 skills-lock.json
 hyperframes.html
 nyxrepost-cinematic.webm
+videos/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

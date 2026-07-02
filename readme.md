@@ -2,9 +2,9 @@
 
 ## Product Video
 
-[![NyxRepost product video preview](docs/media/nyxrepost-promo-preview.gif)](https://nyxrepost.vercel.app/media/nyxrepost-promo.mp4)
+[![NyxRepost product video preview](docs/media/nyxrepost-promo-preview.gif)](https://nyxrepost-node.vercel.app/media/nyxrepost-promo.mp4)
 
-[Watch the full product video](https://nyxrepost.vercel.app/media/nyxrepost-promo.mp4)
+[Watch the full product video](https://nyxrepost-node.vercel.app/media/nyxrepost-promo.mp4)
 
 NyxRepost is a TikTok repost analytics dashboard built with React, Vite, Tailwind CSS, and an Express proxy server. It turns a TikTok username into a readable inspection view with repost history, thumbnails, creator metadata, engagement metrics, trend summaries, tags, and an embedded video preview.
 
