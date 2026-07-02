@@ -1,49 +1,14 @@
-# TikTok Repost Insights Dashboard  
-Advanced analytics for TikTok reposts — word clouds, creator statistics, trend charts, and profile comparison.
+# NyxRepost
 
-## 📊 Overview
-**TikTok Repost Insights** is a full client-side analytics dashboard that visualizes repost behavior using:
-- **Yearly & monthly repost trends**
-- **Word clouds extracted from captions**
-- **Top creator frequency analysis**
-- **Profile comparison mode (Duo Mode)**
-- **Interactive repost list with thumbnails**
-- **Raw JSON viewer for debugging**
+NyxRepost is a focused TikTok repost analytics dashboard. Enter a username, fetch the available repost data, and inspect the returned videos with thumbnails, creator context, engagement stats, trends, tags, and an in-app video preview.
 
-The dashboard is lightweight, mobile-responsive, and built with **TailwindCSS** + **Chart.js**.
+![NyxRepost dashboard](docs/nyxrepost-dashboard.png)
 
----
+## What It Does
 
-## ⚡ Features
-- 🔍 **Fetch TikTok repost data by username**  
-- ☁️ **Dynamic word cloud generation**  
-- 🧠 **Smart comparison between two profiles**  
-- 📈 **Beautiful analytics charts**  
-- 🎨 **Dark UI with glassmorphism aesthetics**  
-- ⚙️ **Client-side only (no backend needed)**  
-- 🔐 **CORS-proxy configurable for production**
-
----
-
-## 🚀 Live Demo
-
-https://github.com/user-attachments/assets/af5cb418-af77-4b16-83ce-20b0aa1c8131
-
-
-
----
-
-## 🧰 Tech Stack
-- **HTML / CSS / JavaScript**
-- **TailwindCSS**
-- **Chart.js**
-- **CORS Proxy (customizable)**
-- Fully client-side with zero backend dependencies.
-
----
-
-## 📦 Getting Started
-
-clone the repo
-open it in browser
-done.
+- Fetches repost data for a TikTok username through the local Node proxy.
+- Shows a two-column repost history designed for fast scanning.
+- Displays thumbnails, captions, creators, dates, durations, and engagement metrics.
+- Lets you filter by text, creator, tag, media type, date range, and engagement.
+- Opens videos in a single embedded preview so only one player loads at a time.
+- Summarizes yearly trends, monthly activity, top tags, top authors, and scan details.
