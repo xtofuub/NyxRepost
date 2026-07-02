@@ -13,7 +13,29 @@ function App() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showCompare, setShowCompare] = useState(() => window.location.hash === '#compare')
+  const [scrollTarget, setScrollTarget] = useState(null)
   const dashboardRef = useRef(null)
+
+  const navigateTo = (section) => {
+    setShowCompare(section === 'Compare')
+    setScrollTarget(section.toLowerCase())
+  }
+
+  useEffect(() => {
+    if (!scrollTarget) return undefined
+
+    const timeout = window.setTimeout(() => {
+      const target = document.getElementById(scrollTarget)
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        window.history.replaceState(null, '', `#${scrollTarget}`)
+      }
+      setScrollTarget(null)
+    }, 0)
+
+    return () => window.clearTimeout(timeout)
+  }, [scrollTarget, showCompare])
 
   useEffect(() => {
     if (loading || (!data && !error)) return
@@ -60,7 +82,7 @@ function App() {
       <div className="relative min-h-screen bg-void text-white overflow-x-hidden noise-overlay">
         <div className="fixed inset-0 bg-radial-mesh pointer-events-none z-0" />
         <div className="relative z-10">
-          <Nav />
+          <Nav onNavigate={navigateTo} />
           <Hero
             onFetch={handleFetch}
             username={username}
@@ -71,7 +93,7 @@ function App() {
           <div id="dashboard" ref={dashboardRef}>
             <Dashboard data={data} loading={loading} error={error} />
           </div>
-          <CompareSection />
+          {showCompare && <CompareSection />}
           <AboutSection />
           <Footer />
         </div>

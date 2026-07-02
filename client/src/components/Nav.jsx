@@ -7,8 +7,16 @@ const hrefs = {
   About: '#about',
 }
 
-export default function Nav() {
+export default function Nav({ onNavigate }) {
   const [open, setOpen] = useState(false)
+
+  const handleLinkClick = (event, label) => {
+    if (onNavigate) {
+      event.preventDefault()
+      onNavigate(label)
+    }
+    setOpen(false)
+  }
 
   return (
     <>
@@ -23,6 +31,7 @@ export default function Nav() {
               <a
                 key={l}
                 href={hrefs[l]}
+                onClick={(event) => handleLinkClick(event, l)}
                 className="text-sm text-white/40 hover:text-white/80 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
               >
                 {l}
@@ -63,7 +72,7 @@ export default function Nav() {
                 open ? 'translate-y-0 opacity-100 blur-0' : 'translate-y-12 opacity-0 blur-sm'
               }`}
               style={{ transitionDelay: open ? `${150 + i * 80}ms` : '0ms' }}
-              onClick={() => setOpen(false)}
+              onClick={(event) => handleLinkClick(event, l)}
             >
               {l}
             </a>
