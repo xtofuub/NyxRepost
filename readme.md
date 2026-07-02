@@ -4,7 +4,7 @@ NyxRepost is a TikTok repost analytics dashboard built with React, Vite, Tailwin
 
 The main goal is simple: make repost activity easier to review without digging through raw API output.
 
-![NyxRepost dashboard](docs/nyxrepost-dashboard.png)
+![NyxRepost dashboard showing m4x1malist's first four reposts and analytics sections](docs/nyxrepost-dashboard.png)
 
 ## Table of Contents
 
