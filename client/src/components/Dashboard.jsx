@@ -641,14 +641,14 @@ function VideoPlayerFrame({ item }) {
 
   if (!playerUrl) {
     return (
-      <div className="flex h-full min-h-[460px] items-center justify-center p-8 text-center text-sm text-white/40">
+      <div className="flex h-full min-h-[520px] items-center justify-center rounded-[1.35rem] bg-black p-8 text-center text-sm text-white/40">
         This repost does not include a playable post id.
       </div>
     )
   }
 
   return (
-    <div className="relative h-full min-h-[460px] bg-black">
+    <div className="relative h-full min-h-[520px] overflow-hidden rounded-[1.35rem] bg-black">
       {!loaded && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
           <div className="h-8 w-8 rounded-full border-2 border-white/15 border-t-white/60 animate-spin" />
@@ -660,11 +660,65 @@ function VideoPlayerFrame({ item }) {
         key={item.id}
         src={playerUrl}
         title={`TikTok preview by @${author}`}
-        className="h-full min-h-[460px] w-full border-0"
+        className="h-full min-h-[520px] w-full border-0"
         allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
         onLoad={() => setLoaded(true)}
       />
+    </div>
+  )
+}
+
+function PreviewMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/[0.055] bg-white/[0.025] px-3 py-3">
+      <div className="text-base font-bold leading-none text-white/86">{numberWithCommas(value)}</div>
+      <div className="mt-1.5 text-[10px] uppercase tracking-[0.13em] text-white/26">{label}</div>
+    </div>
+  )
+}
+
+function PreviewRail({ items, activeIndex, onSelect }) {
+  if (items.length < 2) return null
+
+  return (
+    <div className="mt-5">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-white/28">Queue</div>
+        <div className="text-xs text-white/28">{activeIndex + 1} of {items.length}</div>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+        {items.map((entry, index) => {
+          const src = thumbnailUrl(entry.cover)
+          const active = index === activeIndex
+
+          return (
+            <button
+              type="button"
+              key={itemKey(entry, index)}
+              onClick={() => onSelect(index)}
+              className={`relative h-[82px] w-[58px] shrink-0 overflow-hidden rounded-xl border transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60 ${
+                active ? 'border-accent/55 bg-accent/10' : 'border-white/[0.07] bg-white/[0.025] hover:border-white/[0.16]'
+              }`}
+              aria-label={`Open preview ${index + 1}`}
+            >
+              {src ? (
+                <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-white/[0.03]">
+                  <svg className="h-5 w-5 text-white/14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+              <span className="absolute bottom-1.5 left-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white/75">
+                {index + 1}
+              </span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -680,6 +734,8 @@ function VideoPreviewModal({ item, items = [], onClose }) {
   const total = feedItems.length
   const activeItem = feedItems[activeIndex] || item
   const author = activeItem?.author?.unique_id || 'unknown'
+  const authorName = activeItem?.author?.nickname
+  const tags = getTags(activeItem).slice(0, 4)
   const canGoPrevious = activeIndex > 0
   const canGoNext = activeIndex < total - 1
 
@@ -752,66 +808,94 @@ function VideoPreviewModal({ item, items = [], onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/80 px-4 py-6 backdrop-blur-md"
+      className="fixed inset-0 z-50 overflow-y-auto bg-[#020202]/90 px-3 py-4 backdrop-blur-xl md:px-6 md:py-6"
       role="dialog"
       aria-modal="true"
       aria-label="TikTok preview"
       onMouseDown={onClose}
       onWheel={handleWheel}
     >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(167,139,250,0.11),transparent_34%),radial-gradient(circle_at_80%_80%,rgba(52,211,153,0.06),transparent_28%)]" />
       <div
-        className="mx-auto flex h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-void-mid shadow-[0_8px_32px_rgba(0,0,0,0.45)]"
+        className="relative mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-void-mid/95 shadow-[0_18px_60px_rgba(0,0,0,0.58)] md:min-h-[calc(100dvh-3rem)]"
         onMouseDown={(event) => event.stopPropagation()}
         onWheel={handleWheel}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-4 py-3 md:px-5">
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-white/82">Video preview</div>
-            <div className="mt-0.5 text-xs text-white/32">
-              Scroll to change video - {activeIndex + 1} of {total}
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent/90">
+              {activeIndex + 1} / {total}
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-white/85">Video preview</div>
+              <div className="mt-0.5 truncate text-xs text-white/32">Scroll, swipe, or use arrow keys</div>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/45 transition-colors duration-200 hover:text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
+            className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.035] px-3 py-1.5 text-xs font-semibold text-white/55 transition-colors duration-200 hover:border-white/[0.14] hover:text-white/86 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent/60"
           >
             Close
           </button>
         </div>
 
-        <div className="grid min-h-0 flex-1 overflow-y-auto custom-scrollbar lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)] lg:overflow-hidden">
-          <div className="relative min-h-[460px] bg-black">
-            <VideoPlayerFrame key={itemKey(activeItem, activeIndex)} item={activeItem} />
-            <span className="absolute left-3 top-3 rounded-md bg-black/65 px-2 py-1 text-[10px] font-semibold text-white/80 backdrop-blur">
-              {activeIndex + 1} / {total}
-            </span>
+        <div className="grid min-h-0 flex-1 overflow-y-auto custom-scrollbar lg:grid-cols-[minmax(320px,440px)_minmax(0,1fr)] lg:overflow-hidden">
+          <div className="bg-black/35 p-3 md:p-5">
+            <div className="relative mx-auto h-full max-w-[430px]">
+              <div className="absolute inset-0 rounded-[1.7rem] bg-accent/10 blur-2xl" />
+              <div className="relative h-full rounded-[1.7rem] border border-white/[0.08] bg-black p-2 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+                <VideoPlayerFrame key={itemKey(activeItem, activeIndex)} item={activeItem} />
+              </div>
+            </div>
           </div>
 
           <aside className="flex min-h-0 flex-col p-5 md:p-6">
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-white/80">@{author}</div>
-              <div className="mt-1 text-xs text-white/32">
-                {formatDate(activeItem.create_time)}
-                {activeItem.duration > 0 && ` - ${formatDuration(activeItem.duration)}`}
+            <div className="rounded-2xl border border-white/[0.055] bg-white/[0.025] p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="truncate text-lg font-bold text-white/88">@{author}</div>
+                  {authorName && <div className="mt-0.5 truncate text-sm text-white/36">{authorName}</div>}
+                </div>
+                <div className="shrink-0 rounded-full border border-white/[0.06] bg-black/24 px-2.5 py-1 text-xs text-white/40">
+                  {formatDate(activeItem.create_time)}
+                </div>
               </div>
+
+              {activeItem.duration > 0 && (
+                <div className="mt-3 w-max rounded-full border border-white/[0.055] bg-black/20 px-2.5 py-1 text-xs font-medium text-white/42">
+                  {formatDuration(activeItem.duration)}
+                </div>
+              )}
             </div>
 
-            <p className="mt-5 max-h-40 overflow-y-auto pr-1 text-sm leading-6 text-white/72 custom-scrollbar">
-              {activeItem.desc || 'No description'}
-            </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <MiniStat label="Plays" value={numberWithCommas(activeItem.stats?.play_count)} />
-              <MiniStat label="Likes" value={numberWithCommas(activeItem.stats?.digg_count)} />
-              <MiniStat label="Comments" value={numberWithCommas(activeItem.stats?.comment_count)} />
-              <MiniStat label="Shares" value={numberWithCommas(activeItem.stats?.share_count)} />
+            <div className="mt-4 rounded-2xl border border-white/[0.055] bg-black/18 p-4">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-white/26">Caption</div>
+              <p className="max-h-36 overflow-y-auto pr-1 text-sm leading-6 text-white/72 custom-scrollbar">
+                {activeItem.desc || 'No description'}
+              </p>
+              {tags.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tags.map(tag => (
+                    <span key={tag} className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-xs text-white/42">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <PreviewMetric label="Plays" value={activeItem.stats?.play_count} />
+              <PreviewMetric label="Likes" value={activeItem.stats?.digg_count} />
+              <PreviewMetric label="Comments" value={activeItem.stats?.comment_count} />
+              <PreviewMetric label="Shares" value={activeItem.stats?.share_count} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 disabled={!canGoPrevious}
@@ -830,6 +914,8 @@ function VideoPreviewModal({ item, items = [], onClose }) {
               </button>
             </div>
 
+            <PreviewRail items={feedItems} activeIndex={activeIndex} onSelect={setActiveIndex} />
+
             <div className="mt-auto pt-5">
               <a
                 href={activeItem.share_url}
@@ -841,10 +927,6 @@ function VideoPreviewModal({ item, items = [], onClose }) {
               </a>
             </div>
           </aside>
-        </div>
-
-        <div className="border-t border-white/[0.06] px-4 py-3 text-xs leading-5 text-white/28 md:px-5">
-          Only one player loads at a time. Use scroll, swipe, arrow keys, or the buttons to move through results.
         </div>
       </div>
     </div>
