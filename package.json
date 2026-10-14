@@ -9,7 +9,7 @@
     "setup": "cd client && npm install && cd ../server && npm install"
   },
   "devDependencies": {
-    "concurrently": "^10.0.3"
+    "concurrently": "^10.0.6"
   },
   "dependencies": {
     "heic-convert": "^2.1.0"
